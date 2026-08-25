@@ -54,12 +54,14 @@ $VDS --version
 Set `VDS=` inside every shell call; shell state does not carry over between calls. If
 the environment does provide `vds` on `PATH`, use that and skip `npx`.
 
-- **npx missing, or Node < 18** → ask the user to install Node.js >= 18
+- **npx missing, or Node < 22** → ask the user to install Node.js >= 22
   (<https://nodejs.org>) and stop. Nothing else works until that is fixed.
-- **Version < 0.6** → stop and tell the user. `introspect` and the catalog-generated
-  commands arrived in 0.6.0, which also removed the older hand-written `vds skills`
-  verbs, so none of the above exists there. Do not improvise a fallback — not the old
-  verbs, not `curl`. Note that npm's published `latest` may still predate 0.6.
+- **A command fails with `client_too_old` (exit 8)** → this CLI predates what the
+  server accepts, and the error already names the version to move to. Run
+  `vds upgrade` (or re-invoke with an explicit `@latest`) and retry. Do not improvise
+  a fallback — not the older hand-written `vds skills` verbs, not `curl`. There is no
+  version number to memorize here: the server states its own minimum, so `vds upgrade`
+  and the error text are always current and this file cannot go stale.
 
 ## Step 1 — Which server
 
@@ -96,9 +98,10 @@ loop; what it does not tell you is what goes wrong:
   every time and never approve on their behalf. Pass `--device-label "…"`: the
   hostname default means nothing to someone looking at an approval page for a
   container.
-- **`source: agent-run`** means the platform supplied credentials for this one
-  conversation round. The server and organization are fixed — skip login and org
-  selection entirely and go straight to the task.
+- **`source: agent-run`** means the platform wrote the CLI's config for this one
+  conversation round, and marked it as its own with a platform-minted token. The server
+  and organization are fixed — skip login and org selection entirely and go straight to
+  the task.
 
 ## Step 3 — Organization, and its silent failures
 
@@ -109,9 +112,9 @@ Two failures the CLI will not warn you about:
   *ambiguous*, never when you picked the wrong one — the command simply succeeds
   against the wrong organization, and nothing in the output reveals it. Confirm the
   org **and** the server before any write, and say both back to the user.
-- **`orgs use` can quietly do nothing.** Under `agent-run` the run's credentials
-  outrank the file it edits, so it appears to succeed and changes nothing; with a
-  credential from `VDS_CLI_TOKEN` and no config file it fails with a misleading "Not
+- **`orgs use` does not always stick.** Under `agent-run` it takes effect, but the
+  platform rewrites that file every round, so it silently reverts on the next turn; with
+  a credential from `VDS_CLI_TOKEN` and no config file it fails with a misleading "Not
   authenticated" even though you are authenticated. Prefer `--org <orgId>` per
   command, or `VDS_ORG_ID`.
 

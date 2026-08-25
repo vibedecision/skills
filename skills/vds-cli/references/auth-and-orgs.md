@@ -9,18 +9,19 @@ and `vds <tag> <action> --help` are the reference.
 Resolved **per field**, so a partial source is topped up by a lower one rather than
 discarded. Highest priority first:
 
-1. **The agent-run credentials file** — written fresh each conversation round by the
-   VDS platform when the CLI runs inside a managed sandbox. Short-lived (~30 minutes),
-   never user-managed, and *not* the file a human's `vds auth login` writes.
-2. **`VDS_CLI_TOKEN`**, then **`VDS_API_KEY`** (an alias kept because it is the name
+1. **`VDS_CLI_TOKEN`**, then **`VDS_API_KEY`** (an alias kept because it is the name
    most likely already baked into CI).
-3. **The login the CLI stores locally**, written by `vds auth login`. Treat it as
-   opaque: `vds auth status` and `vds config` report everything about it that you need,
-   and its contents are none of your business.
+2. **The login the CLI stores locally**, written by `vds auth login` — and, inside a
+   managed sandbox, written fresh each conversation round by the VDS platform instead.
+   Treat it as opaque either way: `vds auth status` and `vds config` report everything
+   about it that you need, and its contents are none of your business.
 
-Base URL and organization resolve down the same chain, which is why an agent-run file
-with a blank `orgId` still contributes its token while letting a lower source name the
-org.
+There is no platform-only tier above these. What distinguishes a platform credential
+from a human one is the **token**, not where it was found — see "Inside an agent
+sandbox" below.
+
+Base URL and organization resolve down the same chain, which is why a source that names
+only a token still lets a lower one name the org.
 
 **Discovery is not authentication.** A token found anywhere counts as logged in only
 once `GET /v2/auth/whoami` accepts it — which is what `vds auth status` does, and why a
@@ -65,15 +66,20 @@ org admin, while a missing key scope needs a different key.
 
 ## Inside an agent sandbox
 
-When `source` is `agent-run`, the platform supplies credentials for that one
-conversation round and **the server and organization are fixed**.
+When `source` is `agent-run`, the platform wrote the config file for that one
+conversation round and **the server and organization are fixed**. The marker is the
+token: only the VDS server can mint an `art_` token, while `vds auth login` always
+generates a `vdt_` one locally. So `agent-run` means "these credentials are not yours to
+change", regardless of which file or variable they arrived in.
 
 - `vds auth login` and `vds auth logout` **refuse** with `unsupported_operation`. Not a
-  bug: the agent-run credentials outrank anything login would write, so the login would
-  appear to succeed and change nothing — while clobbering the stored personal login of
-  whoever later uses the CLI in that environment.
-- `vds orgs use` writes that same outranked file, so it silently has no effect. The org
-  looks unchanged on the next `vds config`, which is confusing if you do not know why.
+  bug, and not a no-op either: they write the very file the platform wrote, so a login
+  would swap this round's identity for an unrelated one and act as the wrong user until
+  the next round overwrote it back, while a logout would revoke the round's credential
+  outright.
+- `vds orgs use` **does** take effect here — it edits that same file, preserving the
+  token — but only until the next round rewrites it. Prefer `--org <orgId>` per command,
+  or `VDS_ORG_ID`: a per-command override cannot be reverted underneath you.
 - `vds auth status` still works, and is how you see the active identity.
 
 ## Switching environments
@@ -90,8 +96,9 @@ force a `--refresh`.
 
 ## Organization precedence
 
-Highest first: `--org` → the run's `orgId` (agent-run) → `VDS_ORG_ID` → the active org
-stored by `vds orgs use` → the server's `active_org` → a sole membership.
+Highest first: `--org` → `VDS_ORG_ID` → the active org stored in the config file (by
+`vds orgs use`, or by the platform inside a sandbox) → the server's `active_org` → a
+sole membership.
 
 Belong to several with none selected and the CLI **refuses rather than guessing**,
 listing the candidates in the error. That is the right outcome: picking one would
@@ -108,7 +115,7 @@ attempt, and its error doubles as a listing.
 |---|---|
 | `VDS_CLI_TOKEN` | Bearer token; outranks the stored login |
 | `VDS_API_KEY` | Alias for the above, kept for CI |
-| `VDS_BASE_URL` | Server to talk to, below agent-run and above the stored login |
+| `VDS_BASE_URL` | Server to talk to, above the stored login |
 | `VDS_API_URL` | Default server when nothing else names one |
 | `VDS_ORG_ID` | Active organization, above the one set by `vds orgs use` |
 | `VDS_OUTPUT_FORMAT` | `json` for every command in the session |
