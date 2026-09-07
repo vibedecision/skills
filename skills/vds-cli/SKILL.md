@@ -125,6 +125,13 @@ Two failures the CLI will not warn you about:
 - **Read the tier-2 schema first.** `vds introspect <operationId>` states semantics
   the flag list omits — for instance that a permissions update *replaces* the whole
   grant list rather than merging, so any grant you leave out is revoked.
+- **Never edit an agent to make one chat turn work.** Everything a single run can need is a
+  per-turn option on `threads runs-create` itself (`vds introspect threads.runs.create` lists
+  them); none of it is ever saved to the agent (connectors you name do stay on that chat),
+  and nothing has to be mounted on the agent first. `agents update` is a permanent change to
+  a shared agent that every other chat and user inherits, so use it only when the user asked
+  to change the agent. If a run rejects an id as *not available to you*, that is an access
+  problem to report, not something to route around through the agent.
 - `--scope GLOBAL` makes a skill platform-wide. Never pass it unless explicitly asked.
 - Report the id and version after a successful create.
 - **Never read, open or print a credential.** `vds config` masks the token and
