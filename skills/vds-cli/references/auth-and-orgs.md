@@ -38,9 +38,7 @@ to stderr behind a ten-minute block.
 - **Not yet approved** → exit **3**, with `{"data":{"status":"pending","userCode":…}}`.
 - **Approved** → exit **0**, and the identity is persisted.
 
-Every not-yet-authorized outcome exits 3, including the very first call. Exit 0 means
-logged in and nothing else — which is what makes `until vds auth login --no-wait; do
-sleep 5; done` correct.
+A pending authorization exits 3, including the first call. Retry the identical login command only while its response reports pending. Stop on success, denial, or another error; do not use an unconditional `until` loop that retries every failure.
 
 Outcomes that are **not** "keep waiting":
 
@@ -81,6 +79,10 @@ change", regardless of which file or variable they arrived in.
   token — but only until the next round rewrites it. Prefer `--org <orgId>` per command,
   or `VDS_ORG_ID`: a per-command override cannot be reverted underneath you.
 - `vds auth status` still works, and is how you see the active identity.
+- `readOnly: true` in that file is the platform's too: it is written each round the
+  user's vds-cli read-only switch is on, and the token itself is minted read-only to
+  match, so the server refuses writes whatever the file says. No CLI command clears it —
+  `orgs use` keeps it, and login and logout refuse here anyway.
 
 ## Switching environments
 

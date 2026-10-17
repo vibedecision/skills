@@ -1,18 +1,10 @@
 ---
 name: vds-cli
 description: >
-  Drives a VDS (Vibe Decision Studio) server from the command line with vds-cli.
-  Use this skill whenever the user mentions "vds" or "vds-cli", or wants to do
-  anything with a VDS organization from a terminal: list or inspect VDS skills,
-  agents, threads/chats, connectors, files, folders, members, roles or models;
-  create a skill (from text, GitHub, an upload or the marketplace), or archive,
-  rename or re-scope one; chat with a VDS agent, read a transcript or download a
-  deliverable; change access control on a skill, agent, connector or thread; log in
-  to a local, staging or private VDS deployment; switch VDS org or environment.
-  Also use it when a VDS endpoint needs calling but you are unsure which command
-  exists — the CLI builds its commands from the server, so never guess. Triggers
-  include "publish skill to VDS", "VDS permissions", "switch VDS org" and "login to
-  local VDS", in whatever language the user writes them.
+  Operate or diagnose a VDS organization through vds-cli: inspect resources,
+  manage authorized changes, run agent chats, retrieve deliverables, or resolve
+  authentication and organization selection. Use for actual terminal/CLI work,
+  not general VDS feature or UI questions (use vd-product-guide for those).
 license: MIT
 ---
 
@@ -47,12 +39,10 @@ explicit `@latest` — without it npx silently reuses a cached or globally insta
 older copy:
 
 ```bash
-VDS="npx --yes @vibedecision/vds-cli@latest"
-$VDS --version
+npx --yes @vibedecision/vds-cli@latest --version
 ```
 
-Set `VDS=` inside every shell call; shell state does not carry over between calls. If
-the environment does provide `vds` on `PATH`, use that and skip `npx`.
+For subsequent examples, replace `vds` with the full `npx --yes @vibedecision/vds-cli@latest` invocation when no binary is installed. Do not store the command and its arguments in a scalar shell variable: argument splitting differs between bash and zsh. If `vds` is already on `PATH`, use it and skip `npx`.
 
 - **npx missing, or Node < 22** → ask the user to install Node.js >= 22
   (<https://nodejs.org>) and stop. Nothing else works until that is fixed.
@@ -118,10 +108,25 @@ Two failures the CLI will not warn you about:
   authenticated" even though you are authenticated. Prefer `--org <orgId>` per
   command, or `VDS_ORG_ID`.
 
+## Read-only mode
+
+`vds config` and `vds auth status` report `readOnly`. When it is `true` — inside a VDS
+chat that is the default, set by the user's vds-cli read-only switch — the CLI offers
+only the operations the server marks read-only:
+
+- `vds introspect` and `--help` list only those. The write commands still exist on the
+  server; they are withheld from this credential.
+- Every write — a withheld command, `vds call <id>` of a write, raw `vds call
+  --method/--path` — is refused with `read_only_mode` (exit 4) before anything is sent,
+  and the server refuses the same credential on its own.
+- Use it for what it is for: looking things up to finish the task. If the task needs a
+  change, say exactly what you would change and let the user make it, or ask them to turn
+  read-only mode off for their next message. Never edit or replace the CLI's config,
+  switch credentials, or reach the API another way to get around it.
+
 ## Before you write anything
 
-- Show the user what will change and get confirmation. Creates and permission updates
-  are not obviously reversible from their side.
+- Reuse explicit authorization already given for the operation and target. For an authorized routine create or update, resolve the exact server/org and proceed. Ask before a destructive action, broader sharing, or permission replacement whose resulting scope the user has not approved; first prepare the concrete before/after change. Do not request a second approval solely because the operation is a write.
 - **Read the tier-2 schema first.** `vds introspect <operationId>` states semantics
   the flag list omits — for instance that a permissions update *replaces* the whole
   grant list rather than merging, so any grant you leave out is revoked.
