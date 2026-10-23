@@ -2,9 +2,10 @@
 name: vds-cli
 description: >
   Operate or diagnose a VDS organization through vds-cli: inspect resources,
-  manage authorized changes, run agent chats, retrieve deliverables, or resolve
-  authentication and organization selection. Use for actual terminal/CLI work,
-  not general VDS feature or UI questions (use vd-product-guide for those).
+  manage authorized changes (including connecting a custom MCP server as a
+  connector), run agent chats, retrieve deliverables, or resolve authentication
+  and organization selection. Use for actual terminal/CLI work, not general VDS
+  feature or UI questions (use vd-product-guide for those).
 license: MIT
 ---
 
@@ -161,3 +162,8 @@ only the operations the server marks read-only:
 `references/auth-and-orgs.md` — credential discovery order, the device-login state
 machine, and the environment variables. Read it when a login or an org resolution
 behaves in a way `vds auth status` does not explain.
+
+`references/custom-mcp.md` — adding an MCP server that is not in the connector
+catalog: choosing its transport, keeping its secrets out of the conversation, and the
+create → test → fix loop. Read it before `connectors createCustomMcp`, and whenever a
+custom MCP connector fails its test or its config needs changing.
