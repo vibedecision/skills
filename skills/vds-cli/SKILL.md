@@ -21,7 +21,7 @@ CLI is its own reference, and it is a good one:
 | Question | Ask the CLI |
 |---|---|
 | What can this server do? | `vds introspect`, narrowed by `--tag <family>` or `--q <text>` |
-| How do I call one operation? | `vds introspect <operationId>`, or `--json` for the full schema |
+| How do I call one operation? | `vds introspect <operationId>` prints its exact command, fields and responses; `--json` for the full schema |
 | What flags does a command take? | `vds <tag> <action> --help` |
 | Am I allowed to? | `vds introspect --org <orgId>` |
 | Output formats, exit codes, headless login | `vds --help` documents all three |
@@ -165,5 +165,5 @@ behaves in a way `vds auth status` does not explain.
 
 `references/custom-mcp.md` — adding an MCP server that is not in the connector
 catalog: choosing its transport, keeping its secrets out of the conversation, and the
-create → test → fix loop. Read it before `connectors createCustomMcp`, and whenever a
+create → test → fix loop. Read it before `connectors custom-mcp-create`, and whenever a
 custom MCP connector fails its test or its config needs changing.

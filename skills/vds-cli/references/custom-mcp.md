@@ -4,7 +4,7 @@ Use this when the user wants VDS agents to use an MCP server that is not in the
 connector catalog. A custom MCP connector holds one MCP server, given as the standard
 `mcpServers` config most MCP server READMEs show.
 
-The live contract is the reference: `vds introspect connectors.createCustomMcp`, plus
+The live contract is the reference: `vds introspect connectors.custom-mcp.create`, plus
 `--json` for every field of `CustomMcpServer`. When it disagrees with this file, the
 contract wins. This file covers what the contract cannot: choosing the transport,
 handling the server's secrets, and the create → test → fix loop.
@@ -87,7 +87,7 @@ jq -n --arg token "$DOCS_MCP_TOKEN" '{
     headers: { Authorization: ("Bearer " + $token) }
   } }
 }' > "$payload"
-vds connectors createCustomMcp --data @"$payload" --quiet
+vds connectors custom-mcp-create --data @"$payload" --quiet
 rm -f "$payload"
 ```
 
